@@ -153,6 +153,7 @@ static int max17040_read_reg(struct i2c_client *client, int reg)
 }
 
 #ifdef FUEL_GAUGE_ONLY
+
 int fg_read_vcell(void)
 {
 	struct i2c_client *client = fg_i2c_client;
@@ -187,82 +188,39 @@ int fg_read_soc(void)
 	return min((msb >> 1), 100);
 
 }
-#else
-static void max17040_get_vcell(struct i2c_client *client)
-{
-	struct max17040_chip *chip = i2c_get_clientdata(client);
-	u8 msb;
-	u8 lsb;
 
-	msb = max17040_read_reg(client, MAX17040_VCELL_MSB);
-	lsb = max17040_read_reg(client, MAX17040_VCELL_LSB);
-
-	chip->vcell = (msb << 4) + (lsb >> 4);
-}
-
-static void max17040_get_soc(struct i2c_client *client)
-{
-	struct max17040_chip *chip = i2c_get_clientdata(client);
-	u8 msb;
-	u8 lsb;
-
-	msb = max17040_read_reg(client, MAX17040_SOC_MSB);
-	lsb = max17040_read_reg(client, MAX17040_SOC_LSB);
-
-	chip->soc = min(msb, (u8)100);
-
-}
-
-static void max17040_get_version(struct i2c_client *client)
+int fg_get_version(void)
 {
 	u8 msb;
 	u8 lsb;
-
+        struct i2c_client *client = fg_i2c_client;
 	msb = max17040_read_reg(client, MAX17040_VER_MSB);
 	lsb = max17040_read_reg(client, MAX17040_VER_LSB);
-
-	dev_info(&client->dev, "MAX17040 Fuel-Gauge Ver %d%d\n", msb, lsb);
+        printk("MAX17040 WhisperMods");
+        max17040_write_reg(client,MAX17040_RCOMP_MSB,2700);
+        printk("MAX17040 Fuel-Gauge Ver %d%d\n", msb, lsb);
+        return 5; 
 }
-
-static void max17040_get_online(struct i2c_client *client)
+int fg_get_rcomp(void)
 {
-	struct max17040_chip *chip = i2c_get_clientdata(client);
-
-	if (chip->pdata && chip->pdata->battery_online)
-		chip->online = chip->pdata->battery_online();
-	else
-		chip->online = 1;
+	u8 msb;
+	u8 lsb;
+        struct i2c_client *client = fg_i2c_client;
+	msb = max17040_read_reg(client, MAX17040_RCOMP_MSB);
+	lsb = max17040_read_reg(client, MAX17040_RCOMP_LSB);
+        max17040_write_reg(client,MAX17040_RCOMP_MSB,2700);
+        printk("MAX17040 Fuel-Gauge RCOMP %d%d\n", msb, lsb);
+        return 5; 
 }
-
-static void max17040_get_status(struct i2c_client *client)
-{
-	struct max17040_chip *chip = i2c_get_clientdata(client);
-
-	if (!chip->pdata || !chip->pdata->charger_online ||
-		!chip->pdata->charger_enable) {
-		chip->status = POWER_SUPPLY_STATUS_UNKNOWN;
-		return;
-	}
-
-	if (chip->pdata->charger_online()) {
-		if (chip->pdata->charger_enable())
-			chip->status = POWER_SUPPLY_STATUS_CHARGING;
-		else
-			chip->status = POWER_SUPPLY_STATUS_NOT_CHARGING;
-	} else {
-		chip->status = POWER_SUPPLY_STATUS_DISCHARGING;
-	}
-
-	if (chip->soc > MAX17040_BATTERY_FULL)
-		chip->status = POWER_SUPPLY_STATUS_FULL;
-}
-
+#else
 static void max17040_update_values(struct max17040_chip *chip)
 {
+        i2c_smbus_write_word_data(data->clientp, MAX17040_RCOMP_MSB,swab16(chip->pdata->9300));
 	max17040_get_vcell(chip->client);
 	max17040_get_soc(chip->client);
 	max17040_get_online(chip->client);
 	max17040_get_status(chip->client);
+        max17040_get_version(chip->client);
 
 	/* next update must be at least 1 second later */
 	ktime_get_ts(&chip->next_update_time);
@@ -270,12 +228,7 @@ static void max17040_update_values(struct max17040_chip *chip)
 	chip->next_update_time.tv_sec++;
 }
 
-static enum power_supply_property max17040_battery_props[] = {
-//	POWER_SUPPLY_PROP_STATUS,
-//	POWER_SUPPLY_PROP_ONLINE,
-	POWER_SUPPLY_PROP_VOLTAGE_NOW,
-	POWER_SUPPLY_PROP_CAPACITY,
-};
+
 #endif
 
 static int __devinit max17040_probe(struct i2c_client *client,
@@ -343,7 +296,7 @@ static int __devinit max17040_probe(struct i2c_client *client,
 
 	if (chip->pdata)
 		i2c_smbus_write_word_data(client, MAX17040_RCOMP_MSB,
-			swab16(chip->pdata->rcomp_value));
+			swab16(chip->pdata->0000));
 #endif
 	return 0;
 }

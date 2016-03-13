@@ -48,6 +48,8 @@
 #ifdef HAVE_FUEL_GAUGE
 extern int fg_read_soc(void);
 extern int fg_read_vcell(void);
+extern int fg_get_version(void);
+extern int fg_get_rcomp(void);
 #endif
 
 #ifdef CONFIG_TOUCHSCREEN_ATMEL_MXT1664S
@@ -209,9 +211,10 @@ static int battery_get_property(struct power_supply *battery,
 		case POWER_SUPPLY_PROP_VOLTAGE_NOW:
 			val->intval = fg_read_vcell();
 			break;
-                        
+                    
                 case POWER_SUPPLY_PROP_TEMP:      
-                        val->intval = 5;
+                        val->intval = fg_get_version();
+                        val->intval = fg_get_rcomp();
 		        break;      
 		case POWER_SUPPLY_PROP_CAPACITY:
 			val->intval = fg_read_soc(); // mehmet_VE %1 battery hack                           
@@ -592,7 +595,7 @@ static void max8903_work(struct work_struct *work)
 #endif
 
 	if ( msg_update_cnt > 58 ) {
-		printk("[BATTERY] old_soc=%d soc=%d, vcell=%duV, dc=%s, usb=%s\n", old_soc, soc, fg_read_vcell(), data->ta_in ? "true" : "false", data->usb_in ? "true" : "false");
+		printk("[BATTERY] old_soc=%d soc=%d, vcell=%duV, Rcomp=%d ,dc=%s, usb=%s\n", old_soc, soc, fg_read_vcell(),fg_get_rcomp(), data->ta_in ? "true" : "false", data->usb_in ? "true" : "false");
 		msg_update_cnt = 0;
 	} else {
 		msg_update_cnt++;
@@ -600,7 +603,7 @@ static void max8903_work(struct work_struct *work)
 
 #ifdef BATTERY_DEBUG
 	if ( g_debug_enable ) {
-		printk("[BATTERY] old_soc=%d soc=%d, vcell=%duV, dc=%s, usb=%s\n", old_soc, soc, fg_read_vcell(), data->ta_in ? "true" : "false", data->usb_in ? "true" : "false");
+		printk("[BATTERY] old_soc=%d soc=%d, vcell=%duV, Rcomp=%d ,dc=%s, usb=%s\n", old_soc, soc, fg_read_vcell(),fg_get_rcomp(), data->ta_in ? "true" : "false", data->usb_in ? "true" : "false");
 	}
 #endif
 
