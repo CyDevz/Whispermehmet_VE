@@ -53,6 +53,18 @@ choice
                 Say Y here if you want to use version 2.0.
 endchoice
 
+        config ENABLE_PASSIVE_PEN
+        bool "Enable Passive Pen"
+        depends on MXT1664S_V20
+        help
+                Say Y here if you want to enable passive pen.
+
+        config ENABLE_PASSIVE_PEN_ON_CHARGE
+        bool "Enable Passive Pen while charging *EXPRIMENTAL*"
+        depends on ENABLE_PASSIVE_PEN
+        help
+                Say Y here if you want to enable passive pen usage on charge *EXPRIMENTAL*.
+
 config TOUCHSCREEN_88PM860X
 	tristate "Marvell 88PM860x touchscreen"
 	depends on MFD_88PM860X

@@ -1502,7 +1502,7 @@ int mxt_PROCI_STYLUS_T47(struct mxt_data *mxt)
             PROCI_STYLUS_T47, &obj_size, &obj_addr);
     //printk("mxt_PROCI_STYLUS_T47 obj_size=%d obj_addr=%d  OBJECT_SIZE=22  OBJECT_ADDRESS=674 \n",obj_size,obj_addr );
     memset(&t47_config, 0, sizeof(t47_config));
-
+/*
 #ifdef FEATURE_TOUCH_NOISE
     g_power_noise = gpio_get_value(nDC_OK) ? 0 : 1;
     if (g_power_noise) {
@@ -1515,6 +1515,20 @@ int mxt_PROCI_STYLUS_T47(struct mxt_data *mxt)
     }
 #else
     t47_config.nCTRL=t47_config_data[i++];
+#endif
+*/
+#ifdef CONFIG_ENABLE_PASSIVE_PEN_ON_CHARGE 
+    t47_config.nCTRL=t47_config_data[i++];
+#else
+    g_power_noise = gpio_get_value(nDC_OK) ? 0 : 1;
+    if (g_power_noise) {
+        t47_config.nCTRL=0;
+        i++;
+	printk(KERN_INFO "[ATMEL] passive pen disabled\n");
+    } else {
+        t47_config.nCTRL=t47_config_data[i++];
+	printk(KERN_INFO "[ATMEL] passive pen enabled\n");
+    }
 #endif
 
     t47_config.nCONTMIN=t47_config_data[i++];
